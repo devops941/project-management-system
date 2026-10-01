@@ -1,0 +1,79 @@
+html {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --pms-primary: #4f46e5;
+  --pms-text: #0f172a;
+  --pms-text-muted: #64748b;
+  --pms-border: #e2e8f0;
+  --pms-surface: #ffffff;
+  --pms-radius: 12px;
+}
+
+.card-surface {
+  background: var(--pms-surface);
+  border-radius: var(--pms-radius);
+  border: 1px solid var(--pms-border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.chip-low { background: #e0f2fe; color: #0369a1; }
+.chip-medium { background: #fef3c7; color: #b45309; }
+.chip-high { background: #ffedd5; color: #c2410c; }
+.chip-critical { background: #fee2e2; color: #b91c1c; }
+.chip-neutral { background: #e2e8f0; color: #475569; }
+.chip-status-todo { background: #e2e8f0; color: #475569; }
+.chip-status-in-progress { background: #dbeafe; color: #1d4ed8; }
+.chip-status-done { background: #dcfce7; color: #15803d; }
+.chip-status-planning { background: #ede9fe; color: #6d28d9; }
+.chip-status-active { background: #dbeafe; color: #1d4ed8; }
+.chip-status-on-hold { background: #fef3c7; color: #b45309; }
+.chip-status-completed { background: #dcfce7; color: #15803d; }
+.chip-status-cancelled { background: #fee2e2; color: #b91c1c; }
+
+.toast-success .mdc-snackbar__surface { background: #15803d !important; }
+.toast-error .mdc-snackbar__surface { background: #b91c1c !important; }
+.toast-info .mdc-snackbar__surface { background: #1d4ed8 !important; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+table.pms-table {
+  width: 100%;
+}
+
+.text-muted {
+  color: var(--pms-text-muted);
+}
+
+.mat-mdc-row:hover {
+  background: #f8fafc;
+}

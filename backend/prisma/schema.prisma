@@ -1,0 +1,201 @@
+// Prisma schema for the Project Management System (MongoDB).
+// Collections are namespaced with a "pms_" prefix so that this application can
+// safely share the MongoDB Atlas database with other projects.
+//
+//   pms_roles            -> Role
+//   pms_users            -> User
+//   pms_projects         -> Project
+//   pms_teams            -> Team
+//   pms_team_members     -> TeamMember
+//   pms_tasks            -> Task
+//   pms_task_assignments -> TaskAssignment
+//   pms_task_updates     -> TaskUpdate
+//   pms_notifications    -> Notification
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// 1. Roles & Users  (Module 1: Admin Login, Module 2: User Management)
+// ---------------------------------------------------------------------------
+
+model Role {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique // ADMIN | MANAGER | MEMBER
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+
+  @@map("pms_roles")
+}
+
+model User {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  email        String    @unique
+  passwordHash String
+  phone        String?
+  avatarUrl    String?
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  roleId String @db.ObjectId
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  ledTeams      Team[]           @relation("TeamLead")
+  teamMembers   TeamMember[]
+  assignments   TaskAssignment[]
+  taskUpdates   TaskUpdate[]
+  notifications Notification[]
+
+  @@map("pms_users")
+}
+
+// ---------------------------------------------------------------------------
+// 3. Projects  (Module 3: Project Creation)
+// ---------------------------------------------------------------------------
+
+model Project {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  code        String    @unique
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  priority    String    @default("MEDIUM") // LOW | MEDIUM | HIGH | CRITICAL
+  status      String    @default("PLANNING") // PLANNING | ACTIVE | ON_HOLD | COMPLETED | CANCELLED
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  teams Team[]
+  tasks Task[]
+
+  @@map("pms_projects")
+}
+
+// ---------------------------------------------------------------------------
+// 4. Teams & Team Members  (Module 4: Team Management)
+// ---------------------------------------------------------------------------
+
+model Team {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projectId String?  @db.ObjectId
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  leadId String? @db.ObjectId
+  lead   User?   @relation("TeamLead", fields: [leadId], references: [id])
+
+  members TeamMember[]
+
+  @@map("pms_teams")
+}
+
+model TeamMember {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  joinedAt DateTime @default(now())
+
+  teamId String @db.ObjectId
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@map("pms_team_members")
+}
+
+// ---------------------------------------------------------------------------
+// 5 & 6. Tasks and Task Assignments  (Module 5: Task Creation, Module 6: Assignment)
+// ---------------------------------------------------------------------------
+
+model Task {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  priority    String    @default("MEDIUM") // LOW | MEDIUM | HIGH | CRITICAL
+  status      String    @default("TODO") // TODO | IN_PROGRESS | DONE
+  progress    Int       @default(0) // 0..100 completion percentage
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  projectId String  @db.ObjectId
+  project   Project @relation(fields: [projectId], references: [id])
+
+  assignments TaskAssignment[]
+  updates     TaskUpdate[]
+
+  @@map("pms_tasks")
+}
+
+model TaskAssignment {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  assignedAt DateTime @default(now())
+
+  taskId String @db.ObjectId
+  task   Task   @relation(fields: [taskId], references: [id])
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([taskId, userId])
+  @@map("pms_task_assignments")
+}
+
+// ---------------------------------------------------------------------------
+// 7 & 8. Task Updates / Progress & Deadline  (Module 7: Progress, Module 8: Deadline)
+// ---------------------------------------------------------------------------
+
+model TaskUpdate {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  status          String // TODO | IN_PROGRESS | DONE
+  progress        Int      @default(0)
+  comment         String?
+  previousDueDate DateTime?
+  newDueDate      DateTime?
+  createdAt       DateTime @default(now())
+
+  taskId String @db.ObjectId
+  task   Task   @relation(fields: [taskId], references: [id])
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("pms_task_updates")
+}
+
+// ---------------------------------------------------------------------------
+// 9. Notifications  (Module 9: Notifications)
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  type      String // ASSIGNMENT | DEADLINE_SOON | OVERDUE | STATUS_CHANGE | SYSTEM
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  emailSent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("pms_notifications")
+}
